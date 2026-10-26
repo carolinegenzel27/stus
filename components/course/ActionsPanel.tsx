@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BookOpenText, ClipboardCheck, Layers, MessageCircle } from "lucide-react";
-import { useI18n } from "@/lib/i18n/provider";
+import { BookOpenText, ClipboardCheck, Layers, MessageCircle, Zap } from "lucide-react";
+import { fmt, useI18n } from "@/lib/i18n/provider";
 import type { ProductType } from "@/lib/types";
 import { Panel } from "./Panel";
+import type { Credits } from "./CourseWorkspace";
 
 export const PRODUCT_STYLE: Record<ProductType, { icon: typeof Layers; gradient: string; soft: string }> = {
   summary: { icon: BookOpenText, gradient: "from-sky-400 to-blue-500", soft: "bg-sky-100 text-sky-600" },
@@ -13,8 +14,17 @@ export const PRODUCT_STYLE: Record<ProductType, { icon: typeof Layers; gradient:
   chat: { icon: MessageCircle, gradient: "from-pink-400 to-fuchsia-500", soft: "bg-pink-100 text-pink-600" },
 };
 
-export function ActionsPanel({ disabled, onAction }: { disabled: boolean; onAction: (t: ProductType) => void }) {
+export function ActionsPanel({
+  disabled,
+  credits,
+  onAction,
+}: {
+  disabled: boolean;
+  credits: Credits | null;
+  onAction: (t: ProductType) => void;
+}) {
   const { t } = useI18n();
+  const out = credits !== null && credits.left <= 0;
   const items: { type: ProductType; label: string; desc: string }[] = [
     { type: "summary", label: t.actions.summary, desc: t.actions.summaryDesc },
     { type: "flashcards", label: t.actions.flashcards, desc: t.actions.flashcardsDesc },
@@ -50,7 +60,21 @@ export function ActionsPanel({ disabled, onAction }: { disabled: boolean; onActi
           );
         })}
       </div>
-      {disabled && <p className="mt-3 text-center text-xs text-slate-400">{t.course.actionsHint}</p>}
+      {disabled && !out && <p className="mt-3 text-center text-xs text-slate-400">{t.course.actionsHint}</p>}
+      {credits && (
+        <div className="mt-4">
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+            <Zap size={13} className={out ? "text-rose-500" : "text-amber-500"} />
+            {out ? fmt(t.limit.reached, { total: credits.limit }) : fmt(t.limit.left, { n: credits.left, total: credits.limit })}
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-violet-100">
+            <div
+              className={`h-full rounded-full transition-all ${out ? "bg-rose-400" : "bg-gradient-to-r from-amber-400 to-violet-500"}`}
+              style={{ width: `${Math.max(0, (credits.left / credits.limit) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
     </Panel>
   );
 }

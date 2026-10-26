@@ -10,7 +10,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
   const { id } = await params;
   const { supabase } = await getUser();
 
-  const [{ data: course }, { data: materials }, { data: folders }, { data: products }] = await Promise.all([
+  const [{ data: course }, { data: materials }, { data: folders }, { data: products }, left, limit] = await Promise.all([
     supabase.from("courses").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("materials")
@@ -19,6 +19,8 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
       .order("created_at", { ascending: false }),
     supabase.from("folders").select("*").eq("course_id", id).order("created_at"),
     supabase.from("products").select("*").eq("course_id", id).order("created_at", { ascending: false }),
+    supabase.rpc("ai_credits_left"),
+    supabase.rpc("ai_daily_limit"),
   ]);
   if (!course) notFound();
 
@@ -28,6 +30,11 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
       initialMaterials={(materials ?? []) as Material[]}
       initialFolders={(folders ?? []) as Folder[]}
       initialProducts={(products ?? []) as Product[]}
+      initialCredits={
+        typeof left.data === "number" && typeof limit.data === "number"
+          ? { left: left.data, limit: limit.data }
+          : null
+      }
     />
   );
 }

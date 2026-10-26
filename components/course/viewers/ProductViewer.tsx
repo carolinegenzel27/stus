@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n/provider";
 import type { ChatContent, FlashcardContent, Product, SummaryContent, TestContent } from "@/lib/types";
 import { Modal } from "@/components/ui";
 import { PRODUCT_STYLE } from "../ActionsPanel";
+import type { Credits } from "../CourseWorkspace";
 import { SummaryView } from "./SummaryView";
 import { FlashcardsView } from "./FlashcardsView";
 import { TestView } from "./TestView";
@@ -15,12 +16,16 @@ export function ProductViewer({
   product,
   onClose,
   onProductChange,
+  credits,
+  onCreditsLeft,
 }: {
   courseId: string;
   selectedIds: string[];
   product: Product | "new-chat" | null;
   onClose: () => void;
   onProductChange: (p: Product) => void;
+  credits: Credits | null;
+  onCreditsLeft: (left: number) => void;
 }) {
   const { t } = useI18n();
   const type = product === "new-chat" ? "chat" : product?.type;
@@ -60,6 +65,8 @@ export function ProductViewer({
           product={product === "new-chat" ? null : product}
           initial={product === "new-chat" ? [] : (product.content as ChatContent).messages}
           onCreated={onProductChange}
+          creditLimit={credits?.limit ?? null}
+          onCreditsLeft={onCreditsLeft}
         />
       )}
     </Modal>

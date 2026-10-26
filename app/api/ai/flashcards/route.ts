@@ -4,6 +4,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { getUser } from "@/lib/supabase/server";
 import { AiError, anthropic, checkStop, FALLBACK, MODEL, toHttpError } from "@/lib/ai/client";
 import { loadContext } from "@/lib/ai/context";
+import { consumeCredit } from "@/lib/ai/limit";
 import { flashcardsSchema } from "@/lib/ai/schemas";
 import { saveProduct } from "@/lib/ai/save";
 
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
 
   try {
     const ctx = await loadContext(supabase, user.id, courseId, materialIds);
+    const remaining = await consumeCredit(supabase);
     const target = options.target?.trim();
 
     const response = await anthropic.beta.messages.parse({
@@ -63,9 +65,9 @@ Each card: a short term or question on the front, a clear and concise answer on 
       content: { cards: out.cards.slice(0, options.count) },
       material_ids: materialIds,
     });
-    return NextResponse.json({ product });
+    return NextResponse.json({ product, remaining });
   } catch (err) {
-    const { message, status } = toHttpError(err);
-    return NextResponse.json({ error: message }, { status });
+    const { message, status, code } = toHttpError(err);
+    return NextResponse.json({ error: message, code }, { status });
   }
 }

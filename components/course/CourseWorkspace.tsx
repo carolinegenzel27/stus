@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useI18n } from "@/lib/i18n/provider";
+import { fmt, useI18n } from "@/lib/i18n/provider";
 import type { Course, Folder, Material, Product, ProductType } from "@/lib/types";
 import { Header } from "@/components/Header";
 import { MaterialsPanel } from "./MaterialsPanel";
@@ -14,17 +14,20 @@ import { OptionsDialog } from "./dialogs/OptionsDialog";
 import { ProductViewer } from "./viewers/ProductViewer";
 
 export type Pending = { key: string; type: ProductType };
+export type Credits = { left: number; limit: number };
 
 export function CourseWorkspace({
   course,
   initialMaterials,
   initialFolders,
   initialProducts,
+  initialCredits,
 }: {
   course: Course;
   initialMaterials: Material[];
   initialFolders: Folder[];
   initialProducts: Product[];
+  initialCredits: Credits | null;
 }) {
   const { t, locale } = useI18n();
   const [materials, setMaterials] = useState(initialMaterials);
@@ -34,6 +37,9 @@ export function CourseWorkspace({
   const [dialog, setDialog] = useState<Exclude<ProductType, "chat"> | null>(null);
   const [viewing, setViewing] = useState<Product | "new-chat" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [credits, setCredits] = useState(initialCredits);
+  const outOfCredits = credits !== null && credits.left <= 0;
+  const setLeft = (left: number) => setCredits((c) => (c ? { ...c, left } : c));
   const [tab, setTab] = useState<"materials" | "feed" | "actions">("feed");
 
   const selectedIds = useMemo(() => materials.filter((m) => m.selected).map((m) => m.id), [materials]);
@@ -52,7 +58,12 @@ export function CourseWorkspace({
         body: JSON.stringify({ courseId: course.id, materialIds: selectedIds, options }),
       });
       const data = await res.json();
+      if (data.code === "daily_limit") {
+        setLeft(0);
+        throw new Error(fmt(t.limit.reached, { total: credits?.limit ?? "" }));
+      }
       if (!res.ok) throw new Error(data.error ?? t.common.error);
+      if (typeof data.remaining === "number") setLeft(data.remaining);
       setProducts((p) => [data.product, ...p]);
       setViewing(data.product);
     } catch (e) {
@@ -99,7 +110,8 @@ export function CourseWorkspace({
       <main className="mx-auto grid w-full max-w-[1600px] flex-1 gap-5 p-4 lg:grid-cols-[260px_minmax(0,1fr)_320px]">
         <aside className={clsx(tab !== "actions" && "hidden", "lg:block")}>
           <ActionsPanel
-            disabled={selectedIds.length === 0}
+            disabled={selectedIds.length === 0 || outOfCredits}
+            credits={credits}
             onAction={(type) => {
               if (type === "chat") setViewing("new-chat");
               else setDialog(type);
@@ -137,6 +149,8 @@ export function CourseWorkspace({
         selectedIds={selectedIds}
         product={viewing}
         onClose={() => setViewing(null)}
+        credits={credits}
+        onCreditsLeft={setLeft}
         onProductChange={(p) => {
           setProducts((list) => (list.some((x) => x.id === p.id) ? list.map((x) => (x.id === p.id ? p : x)) : [p, ...list]));
           setViewing(p);

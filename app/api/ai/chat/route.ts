@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getUser } from "@/lib/supabase/server";
 import { anthropic, FALLBACK, MODEL, toHttpError } from "@/lib/ai/client";
 import { loadContext } from "@/lib/ai/context";
+import { consumeCredit } from "@/lib/ai/limit";
 import { saveProduct } from "@/lib/ai/save";
 import type { ChatContent, ChatMessage } from "@/lib/types";
 
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
     }
 
     const ctx = await loadContext(supabase, user.id, courseId, materialIds);
+    const remaining = await consumeCredit(supabase);
 
     if (!id) {
       const product = await saveProduct(supabase, {
@@ -108,10 +110,14 @@ export async function POST(req: Request) {
     });
 
     return new Response(readable, {
-      headers: { "Content-Type": "text/plain; charset=utf-8", "X-Product-Id": chatId },
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Product-Id": chatId,
+        "X-AI-Remaining": String(remaining),
+      },
     });
   } catch (err) {
-    const { message: msg, status } = toHttpError(err);
-    return NextResponse.json({ error: msg }, { status });
+    const { message: msg, status, code } = toHttpError(err);
+    return NextResponse.json({ error: msg, code }, { status });
   }
 }

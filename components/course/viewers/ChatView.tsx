@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Send } from "lucide-react";
-import { useI18n } from "@/lib/i18n/provider";
+import { fmt, useI18n } from "@/lib/i18n/provider";
 import type { ChatMessage, Product } from "@/lib/types";
 import { Button, Spinner } from "@/components/ui";
 import { Markdown } from "./Markdown";
@@ -14,12 +14,16 @@ export function ChatView({
   product,
   initial,
   onCreated,
+  creditLimit,
+  onCreditsLeft,
 }: {
   courseId: string;
   selectedIds: string[];
   product: Product | null;
   initial: ChatMessage[];
   onCreated: (p: Product) => void;
+  creditLimit: number | null;
+  onCreditsLeft: (left: number) => void;
 }) {
   const { t } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>(initial);
@@ -53,8 +57,14 @@ export function ChatView({
       });
       if (!res.ok || !res.body) {
         const data = await res.json().catch(() => ({}));
+        if (data.code === "daily_limit") {
+          onCreditsLeft(0);
+          throw new Error(fmt(t.limit.reached, { total: creditLimit ?? "" }));
+        }
         throw new Error(data.error ?? t.common.error);
       }
+      const left = Number(res.headers.get("X-AI-Remaining"));
+      if (res.headers.has("X-AI-Remaining") && !Number.isNaN(left)) onCreditsLeft(left);
 
       const id = res.headers.get("X-Product-Id");
       const reader = res.body.getReader();

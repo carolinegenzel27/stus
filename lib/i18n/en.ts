@@ -241,6 +241,10 @@ export const en = {
     points: ["Summaries in seconds", "Flashcards & practice tests", "Chat with your files"],
     back: "Back to home",
   },
+  limit: {
+    left: "{n} of {total} AI actions left today",
+    reached: "You've used all {total} AI actions for today. They reset at midnight 🌙",
+  },
   product: { summary: "Summary", flashcards: "Flashcards", test: "Test", chat: "Chat" },
 };
 

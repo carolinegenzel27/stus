@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getUser } from "@/lib/supabase/server";
 import { anthropic, checkStop, FALLBACK, MODEL, toHttpError } from "@/lib/ai/client";
 import { loadContext } from "@/lib/ai/context";
+import { consumeCredit } from "@/lib/ai/limit";
 import { saveProduct } from "@/lib/ai/save";
 
 export const maxDuration = 300;
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
 
   try {
     const ctx = await loadContext(supabase, user.id, courseId, materialIds);
+    const remaining = await consumeCredit(supabase);
     const notes = options.notes?.trim();
 
     const response = await anthropic.beta.messages.create({
@@ -72,9 +74,9 @@ Format the answer in Markdown. Start with a single line "# <short title for this
       content: { markdown: body },
       material_ids: materialIds,
     });
-    return NextResponse.json({ product });
+    return NextResponse.json({ product, remaining });
   } catch (err) {
-    const { message, status } = toHttpError(err);
-    return NextResponse.json({ error: message }, { status });
+    const { message, status, code } = toHttpError(err);
+    return NextResponse.json({ error: message, code }, { status });
   }
 }

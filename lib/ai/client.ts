@@ -20,6 +20,7 @@ export class AiError extends Error {
   constructor(
     message: string,
     public status = 500,
+    public code?: string,
   ) {
     super(message);
   }
@@ -31,7 +32,7 @@ export function checkStop(stopReason: string | null) {
 }
 
 export function toHttpError(err: unknown) {
-  if (err instanceof AiError) return { message: err.message, status: err.status };
+  if (err instanceof AiError) return { message: err.message, status: err.status, code: err.code };
   if (err instanceof Anthropic.RateLimitError) return { message: "Too many requests, try again in a minute.", status: 429 };
   if (err instanceof Anthropic.AuthenticationError) return { message: "AI is not configured (check ANTHROPIC_API_KEY).", status: 500 };
   if (err instanceof Anthropic.APIError) return { message: `AI error: ${err.message}`, status: 502 };
