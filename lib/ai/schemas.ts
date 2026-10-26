@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const flashcardsSchema = z.object({
-  title: z.string().describe("Short title for this deck, in the material's language"),
+  title: z.string().describe("Short title for this deck, in the output language"),
   cards: z.array(
     z.object({
       front: z.string().describe("Term or question"),
@@ -11,14 +11,14 @@ export const flashcardsSchema = z.object({
 });
 
 export const testSchema = z.object({
-  title: z.string().describe("Short title for this test, in the material's language"),
+  title: z.string().describe("Short title for this test, in the output language"),
   questions: z.array(
     z.object({
       kind: z.enum(["yesno", "mc", "open"]),
       question: z.string(),
       options: z
         .array(z.string())
-        .describe('For "mc": exactly 4 options. For "yesno": ["Yes","No"] in the material language. For "open": empty.'),
+        .describe('For "mc": exactly 4 options. For "yesno": ["Yes","No"] translated to the output language (e.g. ["כן","לא"]). For "open": empty.'),
       answer: z
         .string()
         .describe('For "mc"/"yesno": the exact text of the correct option. For "open": a model answer.'),

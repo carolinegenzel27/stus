@@ -4,6 +4,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { getUser } from "@/lib/supabase/server";
 import { anthropic, checkStop, FALLBACK, MODEL, toHttpError } from "@/lib/ai/client";
 import { gradeSchema } from "@/lib/ai/schemas";
+import { LANGUAGE_RULE, outputLanguage } from "@/lib/ai/context";
 import type { TestContent, TestResult } from "@/lib/types";
 
 export const maxDuration = 300;
@@ -65,8 +66,7 @@ export async function POST(req: Request) {
         max_tokens: 8000,
         ...FALLBACK,
         output_config: { effort: "low", format: betaZodOutputFormat(gradeSchema) },
-        system:
-          "You grade a student's answers to open study questions against a model answer. Mark an answer correct if it captures the essential idea, even if worded differently or less complete. Write feedback in the same language as the question.",
+        system: `You grade a student's answers to open study questions against a model answer. Mark an answer correct if it captures the essential idea, even if worded differently, in another language, or less complete. ${LANGUAGE_RULE(await outputLanguage())}`,
         messages: [
           {
             role: "user",
