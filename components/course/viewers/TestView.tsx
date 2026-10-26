@@ -129,16 +129,18 @@ export function TestView({
                 ) : (
                   <XCircle size={18} className="shrink-0 text-rose-500" />
                 )}
-                <div dir="auto">
+                {/* Labels follow the UI language; AI text keeps its own direction. */}
+                <div className="min-w-0 flex-1">
                   <span className={clsx("font-semibold", ok ? "text-emerald-700" : "text-rose-600")}>
                     {ok ? t.test.correct : t.test.wrong}
                   </span>
                   {q.kind === "open" && (
-                    <p className="mt-1 text-slate-600">
-                      <span className="font-medium">{t.test.correctAnswer}:</span> {q.answer}
-                    </p>
+                    <>
+                      <p className="mt-1 font-medium text-slate-700">{t.test.correctAnswer}:</p>
+                      <p className="text-slate-600" dir="auto">{q.answer}</p>
+                    </>
                   )}
-                  <p className="mt-1 text-slate-600">{result.feedback[i]}</p>
+                  <p className="mt-1 text-slate-600" dir="auto">{result.feedback[i]}</p>
                 </div>
               </div>
             )}

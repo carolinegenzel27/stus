@@ -3,6 +3,9 @@ import { getUser } from "@/lib/supabase/server";
 import { CourseWorkspace } from "@/components/course/CourseWorkspace";
 import type { Course, Folder, Material, Product } from "@/lib/types";
 
+// Per-user data, rendered on request.
+export const instant = false;
+
 export default async function CoursePage({ params }: PageProps<"/courses/[id]">) {
   const { id } = await params;
   const { supabase } = await getUser();

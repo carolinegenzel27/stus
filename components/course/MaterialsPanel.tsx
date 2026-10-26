@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { Check, ClipboardPaste, FileText, FileType, Trash2, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { fmt, useI18n } from "@/lib/i18n/provider";
+import { useHydrated } from "@/lib/useHydrated";
 import type { Material } from "@/lib/types";
 import { Button, Input, Modal, Spinner, Textarea } from "@/components/ui";
 import { Panel } from "./Panel";
@@ -19,7 +20,8 @@ export function MaterialsPanel({
   materials: Material[];
   setMaterials: React.Dispatch<React.SetStateAction<Material[]>>;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const hydrated = useHydrated();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(0);
   const [dragOver, setDragOver] = useState(false);
@@ -163,7 +165,8 @@ export function MaterialsPanel({
                   {m.title}
                 </p>
                 <p className="text-xs text-slate-400">
-                  {m.char_count.toLocaleString()} chars · {new Date(m.created_at).toLocaleDateString()}
+                  {m.char_count.toLocaleString("en-US")} chars
+                  {hydrated && ` · ${new Date(m.created_at).toLocaleDateString(locale === "he" ? "he-IL" : "en-US")}`}
                 </p>
               </div>
               <button

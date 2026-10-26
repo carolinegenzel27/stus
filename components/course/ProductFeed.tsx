@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { Folder as FolderIcon, FolderInput, MoreVertical, Pencil, Plus, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n/provider";
+import { useHydrated } from "@/lib/useHydrated";
 import type { Folder, Product } from "@/lib/types";
 import { Button, Input, Modal } from "@/components/ui";
 import { PRODUCT_STYLE } from "./ActionsPanel";
@@ -34,8 +35,10 @@ export function ProductFeed({
   const [folderDialog, setFolderDialog] = useState(false);
   const [renaming, setRenaming] = useState<Product | null>(null);
 
+  const hydrated = useHydrated();
   const visible = active ? products.filter((p) => p.folder_id === active) : products;
-  const groups = groupByDate(visible, locale, t.course.today, t.course.yesterday);
+  // Day groups depend on the viewer's time zone, so they're computed in the browser only.
+  const groups = hydrated ? groupByDate(visible, locale, t.course.today, t.course.yesterday) : [];
 
   async function updateProduct(id: string, patch: Partial<Product>) {
     setProducts((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
@@ -219,7 +222,7 @@ function ProductCard({
   onRename: () => void;
   onDelete: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [menu, setMenu] = useState<"main" | "move" | null>(null);
   const { icon: Icon, gradient } = PRODUCT_STYLE[product.type];
   const folder = folders.find((f) => f.id === product.folder_id);
@@ -244,7 +247,7 @@ function ProductCard({
           <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-400">
             <span>{t.product[product.type]}</span>
             <span>·</span>
-            <span>{new Date(product.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            <span>{new Date(product.created_at).toLocaleTimeString(locale === "he" ? "he-IL" : "en-US", { hour: "2-digit", minute: "2-digit" })}</span>
             {describe(product, t) && (
               <>
                 <span>·</span>

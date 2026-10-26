@@ -3,6 +3,9 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { Landing } from "@/components/landing/Landing";
 import type { Course } from "@/lib/types";
 
+// Per-user data, rendered on request.
+export const instant = false;
+
 export default async function HomePage() {
   const { supabase, user } = await getUser();
   if (!user) return <Landing />;

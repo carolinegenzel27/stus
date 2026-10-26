@@ -90,3 +90,7 @@ body {
 .prose-stus table { border-collapse: collapse; margin: 0.75em 0; }
 .prose-stus th,
 .prose-stus td { border: 1px solid #e9d5ff; padding: 0.35em 0.6em; }
+
+/* Formulas are always left-to-right, also inside Hebrew text */
+.prose-stus .katex { direction: ltr; unicode-bidi: isolate; font-size: 1.05em; }
+.prose-stus .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.25em 0; }

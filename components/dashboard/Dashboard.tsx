@@ -9,6 +9,7 @@ import { MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { createCourse, deleteCourse, renameCourse } from "@/app/actions";
 import { COLOR_CLASSES } from "@/lib/courses";
 import { fmt, useI18n } from "@/lib/i18n/provider";
+import { useHydrated } from "@/lib/useHydrated";
 import type { Course } from "@/lib/types";
 import { Header } from "@/components/Header";
 import { CourseDialog } from "./CourseDialog";
@@ -21,9 +22,17 @@ export function Dashboard({ username, courses }: { username: string; courses: Co
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<CourseItem | null>(null);
 
-  const hour = new Date().getHours();
+  // Time of day comes from the viewer's clock, not the server's.
+  const hydrated = useHydrated();
+  const hour = hydrated ? new Date().getHours() : null;
   const greeting =
-    hour < 12 ? t.dashboard.greeting.morning : hour < 18 ? t.dashboard.greeting.afternoon : t.dashboard.greeting.evening;
+    hour === null
+      ? null
+      : hour < 12
+        ? t.dashboard.greeting.morning
+        : hour < 18
+          ? t.dashboard.greeting.afternoon
+          : t.dashboard.greeting.evening;
 
   async function handleCreate(name: string, emoji: string | null) {
     const id = await createCourse({ name, emoji });
@@ -38,7 +47,7 @@ export function Dashboard({ username, courses }: { username: string; courses: Co
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800">
-            {greeting}, <span className="bg-gradient-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-transparent">{username}</span>{" "}
+            {greeting && `${greeting}, `}<span className="bg-gradient-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-transparent">{username}</span>{" "}
             <motion.span
               className="inline-block"
               animate={{ rotate: [0, 18, -8, 18, 0] }}
@@ -86,7 +95,7 @@ export function Dashboard({ username, courses }: { username: string; courses: Co
                   <div className="mt-1 flex justify-between text-sm text-slate-500">
                     <span>{fmt(t.dashboard.materials, { n: c.materialCount })}</span>
                     <span>
-                      {fmt(t.dashboard.lastActivity, {
+                      {hydrated && fmt(t.dashboard.lastActivity, {
                         date: new Date(c.updated_at).toLocaleDateString(locale === "he" ? "he-IL" : "en-US", {
                           month: "short",
                           day: "numeric",
