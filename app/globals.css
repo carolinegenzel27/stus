@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-rubik);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #faf7ff;
+  --foreground: #1e1b2e;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-rubik), system-ui, sans-serif;
 }
+
+/* Soft animated blobs behind pages */
+.bg-blobs {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-blobs::before,
+.bg-blobs::after {
+  content: "";
+  position: absolute;
+  width: 45vmax;
+  height: 45vmax;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: float 18s ease-in-out infinite alternate;
+}
+.bg-blobs::before {
+  background: #c4b5fd;
+  top: -15vmax;
+  inset-inline-start: -10vmax;
+}
+.bg-blobs::after {
+  background: #fbcfe8;
+  bottom: -15vmax;
+  inset-inline-end: -10vmax;
+  animation-delay: -9s;
+}
+@keyframes float {
+  to {
+    transform: translate(6vmax, 4vmax) scale(1.1);
+  }
+}
+
+/* Flashcard flip */
+.flip-card {
+  perspective: 1200px;
+}
+.flip-inner {
+  transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+.prose-stus h1,
+.prose-stus h2,
+.prose-stus h3 {
+  font-weight: 700;
+  margin: 1.1em 0 0.4em;
+  color: #5b21b6;
+}
+.prose-stus h1 { font-size: 1.5rem; }
+.prose-stus h2 { font-size: 1.25rem; }
+.prose-stus h3 { font-size: 1.1rem; }
+.prose-stus p { margin: 0.5em 0; line-height: 1.7; }
+.prose-stus ul,
+.prose-stus ol { padding-inline-start: 1.4em; margin: 0.5em 0; }
+.prose-stus ul { list-style: disc; }
+.prose-stus ol { list-style: decimal; }
+.prose-stus li { margin: 0.25em 0; }
+.prose-stus strong { color: #6d28d9; }
+.prose-stus code { background: #f3e8ff; padding: 0.1em 0.35em; border-radius: 0.3em; }
+.prose-stus table { border-collapse: collapse; margin: 0.75em 0; }
+.prose-stus th,
+.prose-stus td { border: 1px solid #e9d5ff; padding: 0.35em 0.6em; }
